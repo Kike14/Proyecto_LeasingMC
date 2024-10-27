@@ -9,7 +9,7 @@ class Preprocess():
 
         self.file = file
         self.opened_file = self.load_file(file)
-
+        null_proportion = self.null_proportion()
 
     def load_file(self, file_path: str) -> BytesIO:
 
@@ -45,6 +45,15 @@ class Preprocess():
 
         return df
 
+    def null_proportion(self):
+
+        null_proportion = dict()
+        for column in self.opened_file.columns:
+
+            null_proportion[column] =  round(len(self.opened_file[self.opened_file[column].isnull()]) / len(self.opened_file), 3)
+
+        null_df = pd.DataFrame(list(null_proportion.items()), columns=['Column', 'Null Proportion'])
+        return null_df
 
 
 pd.set_option('display.width', 100)
@@ -55,6 +64,11 @@ if __name__ == "__main__":
 
     route: str = "data/data.csv"
     data = Preprocess("data/data.csv")
-    personal = data.get_info()
-    print(personal)
+    # personal = data.get_info()
+    # print(personal)
+    print(data.null_proportion())
+    # print(personal.info())
+    # print(len(personal))
+    # print(personal["person_emp_length"].unique())
+    #
 
