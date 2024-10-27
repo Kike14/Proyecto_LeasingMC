@@ -1,17 +1,19 @@
 import numpy as np
 import pandas as pd
 from io import BytesIO
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 class Preprocess():
 
     def __init__(self, file: BytesIO):
 
-        self.file = file
-        self.opened_file = self.load_file(file)
-        null_proportion = self.null_proportion()
+        self.opened_file = self._load_file(file)
+        self.personal = self._get_info()
 
-    def load_file(self, file_path: str) -> BytesIO:
+
+    def _load_file(self, file_path: str) -> BytesIO:
 
         """
         Load the file based on its extension.
@@ -38,22 +40,37 @@ class Preprocess():
             return None
 
 
-    def get_info(self) -> pd.DataFrame :
+    def _get_info(self) -> pd.DataFrame :
 
         df = self.opened_file
         df = df[df["loan_intent"] == "PERSONAL"]
 
         return df
 
-    def null_proportion(self):
+    def null_proportion(self) -> pd.DataFrame:
 
         null_proportion = dict()
+
         for column in self.opened_file.columns:
 
-            null_proportion[column] =  round(len(self.opened_file[self.opened_file[column].isnull()]) / len(self.opened_file), 3)
+            null_proportion[column] = round(
+                len(self.opened_file[self.opened_file[column].isnull()]) / len(self.opened_file), 3)
 
+        null_proportion["Total"] = round(self.opened_file.isnull().sum().sum() / self.opened_file.size, 3)
         null_df = pd.DataFrame(list(null_proportion.items()), columns=['Column', 'Null Proportion'])
+
         return null_df
+
+    def distribution(self):
+
+        numeric_columns = self.personal.select_dtypes(include="number")
+        for column in numeric_columns:
+            sns.displot(numeric_columns[column], kde=True)
+            plt.title(f'Distribution of {column}')
+            plt.show()
+
+
+
 
 
 pd.set_option('display.width', 100)
@@ -64,11 +81,8 @@ if __name__ == "__main__":
 
     route: str = "data/data.csv"
     data = Preprocess("data/data.csv")
-    # personal = data.get_info()
-    # print(personal)
-    print(data.null_proportion())
-    # print(personal.info())
-    # print(len(personal))
-    # print(personal["person_emp_length"].unique())
-    #
+    personal = data.personal
+    # print(type(personal))
+    print(data.distribution())
+
 
