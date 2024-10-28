@@ -63,33 +63,34 @@ class Preprocess():
         return null_df
 
 
-    def change_outliers(self) -> pd.DataFrame:
+    def change_outliers(self, dataframe: pd.DataFrame) -> pd.DataFrame:
+
+        no_outliers_df = dataframe.copy()
 
         columns = ['person_age', 'person_emp_length']
 
         for column in columns:
 
-            median = self.personal[column].median()
-            self.personal.loc[:, column] = self.personal.loc[:, column].apply(lambda x: median if x > 100 else x)
+            median = no_outliers_df[column].median()
+            no_outliers_df.loc[:, column] = no_outliers_df.loc[:, column].apply(lambda x: median if x > 100 else x)
 
 
-        return self.opened_file
+        return no_outliers_df
 
-    def fill_null_values(self) -> pd.DataFrame:
+    def fill_null_values(self, dataframe: pd.DataFrame) -> pd.DataFrame:
 
-        for column in self.personal.columns:
+        filled_df = dataframe.copy()
 
-            if self.personal.loc[:, column].dtype == 'object':
+        for column in dataframe.columns:
+
+            if dataframe.loc[:, column].dtype == 'object':
                 continue
 
             else:
+                median = dataframe.loc[:, column].median()
+                dataframe.loc[:, column] = dataframe.loc[:, column].apply(lambda x: median if pd.isna(x) else x)
 
-                median = self.personal.loc[:, column].median()
-
-                self.personal.loc[:, column] = self.personal.loc[:, column].apply(lambda x: median if pd.isna(x) else x)
-
-
-        return self.opened_file
+        return dataframe
 
 
     def distribution(self) -> Figure:
@@ -137,6 +138,18 @@ class Preprocess():
         return fig
 
 
+    def preprocessed_data(self, dataframe: pd.DataFrame) -> pd.DataFrame:
+
+        df = dataframe.copy()
+        no_out_df = self.change_outliers(df)
+        fill_nu_df = self.fill_null_values(no_out_df)
+
+
+        return fill_nu_df
+
+
+
+
 
 pd.set_option('display.width', 1000)
 pd.set_option('display.max_columns', 30)
@@ -144,12 +157,10 @@ pd.set_option('display.max_rows', 20)
 
 
 if __name__ == "__main__":
-
     route: str = "data/data.csv"
     data = Preprocess("data/data.csv", "PERSONAL")
     old = data.personal
-    data.change_outliers()
-    new = data.fill_null_values()
+    new = data.preprocessed_data(old)
     print(old)
     print(new)
     print(data.distribution_with_changes(old_dataframe=old, new_dataframe=new))
