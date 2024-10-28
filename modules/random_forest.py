@@ -1,0 +1,3 @@
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from Proyecto_LeasingMC.fixing_data.preprocess import Preprocess
