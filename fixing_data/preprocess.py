@@ -180,13 +180,26 @@ class Preprocess():
                 return "high_income"
             else:
                 return "super_high_income"
+            
+        def cat_dti(percentage):
+            if percentage <= .20:
+                return 'bajo_endeudamiento'
+            elif .21 <= percentage <= .35:
+                return 'moderado_endeudamiento'
+            elif .36 <= percentage <= .50:
+                return 'alto_endeudamiento'
+            elif .51 <= percentage <= .70:
+                return 'endeudamiento_critico'
+            else:
+                return 'sobreendeudado'
 
         df = df.drop(columns="loan_intent")
         df['person_age'] = df['person_age'].apply(categorias)
         df['person_income'] = df['person_income'].apply(cat_ingresos)
+        df['loan_percent_income'] = df['loan_percent_income'].apply(cat_dti)
         # 1 cayo en impago, 0 no cayo en impago
         df['cb_person_default_on_file'] = (df['cb_person_default_on_file'] != 'N').astype(int)
-        dummy_columns: list = ['person_age', "person_income", 'person_home_ownership', 'loan_grade']
+        dummy_columns: list = ['person_age', "person_income", 'person_home_ownership', 'loan_grade, loan_percent_income']
         df = pd.get_dummies(df, columns=dummy_columns)
         for col in df.select_dtypes(include='bool'):
             df[col] = df[col].astype(int)

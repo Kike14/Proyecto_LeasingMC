@@ -80,7 +80,6 @@ columnas_a_eliminar = [
     ]
 df_dummies.drop(columnas_a_eliminar, axis=1, inplace=True)
 
-    # Ver las primeras filas del DataFrame resultante
 print(df_dummies.columns)
 
 
