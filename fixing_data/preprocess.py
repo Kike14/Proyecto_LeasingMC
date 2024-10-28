@@ -149,6 +149,51 @@ class Preprocess():
 
 
 
+    def get_dummies(self, dataframe: pd.DataFrame):
+
+        df = dataframe.copy()
+
+        def categorias(edad):
+            if edad < 18:
+                return 'menor_de_edad'
+            elif 18 <= edad <= 25:
+                return 'jovenes'
+            elif 26 <= edad <= 35:
+                return 'adulto_joven'
+            elif 36 <= edad <= 45:
+                return 'adulto'
+            elif 46 <= edad <= 55:
+                return 'adulto_mayor'
+            else:
+                return 'tercera_edad'
+
+        def cat_ingresos(income):
+            if income <= 5000:
+                return 'low_income'
+            elif 5001 <= income <= 10000:
+                return "medium_low_income"
+            elif 10001 <= income <= 20000:
+                return "medium_income"
+            elif 20001 <= income <= 50000:
+                return "medium_high_income"
+            elif 50001 <= income <= 100000:
+                return "high_income"
+            else:
+                return "super_high_income"
+
+        df = df.drop(columns="loan_intent")
+        df['person_age'] = df['person_age'].apply(categorias)
+        df['person_income'] = df['person_income'].apply(cat_ingresos)
+        # 1 cayo en impago, 0 no cayo en impago
+        df['cb_person_default_on_file'] = (df['cb_person_default_on_file'] != 'N').astype(int)
+        dummy_columns: list = ['person_age', "person_income", 'person_home_ownership', 'loan_grade']
+        df = pd.get_dummies(df, columns=dummy_columns)
+        for col in df.select_dtypes(include='bool'):
+            df[col] = df[col].astype(int)
+
+        return df
+
+
 
 
 pd.set_option('display.width', 1000)

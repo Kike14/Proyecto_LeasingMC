@@ -7,6 +7,8 @@ from fixing_data.preprocess import Preprocess
 
 path = "C:/Users/Usuario/OneDrive/Escritorio/credit_risk_dataset.csv"
 
+
+
 if __name__ == "__main__":
     route: str = path
     data= Preprocess(path, "PERSONAL")
