@@ -199,7 +199,7 @@ class Preprocess():
         df['loan_percent_income'] = df['loan_percent_income'].apply(cat_dti)
         # 1 cayo en impago, 0 no cayo en impago
         df['cb_person_default_on_file'] = (df['cb_person_default_on_file'] != 'N').astype(int)
-        dummy_columns: list = ['person_age', "person_income", 'person_home_ownership', 'loan_grade, loan_percent_income']
+        dummy_columns: list = ['person_age', "person_income", 'person_home_ownership', 'loan_grade', 'loan_percent_income']
         df = pd.get_dummies(df, columns=dummy_columns)
         for col in df.select_dtypes(include='bool'):
             df[col] = df[col].astype(int)

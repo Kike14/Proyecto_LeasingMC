@@ -1,6 +1,11 @@
+import sys
+import os
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(project_root)
+
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from Proyecto_LeasingMC.fixing_data.preprocess import Preprocess
+from       fixing_data.preprocess import Preprocess
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score, confusion_matrix
 from sklearn.model_selection import GridSearchCV
 
@@ -26,10 +31,10 @@ class Forest():
         # Hacer predicciones
         y_pred = model.predict(self.X_test)
 
-        return y_pred
+        return model, y_pred
 
     def metrics(self):
-        y_pred = self.model()
+        model, y_pred = self.model()
         # Calcular las métricas
         accuracy = accuracy_score(self.y_test, y_pred)
         recall = recall_score(self.y_test, y_pred)
@@ -80,7 +85,7 @@ class Forest():
         print("Test Accuracy:", accuracy)
 
 if __name__ == "__main__":
-    route = "../data/data.csv"
+    route = "./data/data.csv"
     forest = Forest(route)
     forest.optimize_model()
     # forest.model()
