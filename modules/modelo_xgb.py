@@ -1,8 +1,8 @@
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
+from xgboost import XGBClassifier
 from Proyecto_LeasingMC.fixing_data.preprocess import Preprocess
-import pandas as pd
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score, confusion_matrix
+
 
 
 class Lg():
@@ -21,8 +21,13 @@ class Lg():
 
 
     def model(self):
-
-        model = LogisticRegression(max_iter=100)
+        model = XGBClassifier(
+            objective='binary:logistic',  # For binary classification; use 'multi:softmax' for multi-class
+            n_estimators=100,  # Number of trees
+            learning_rate=0.1,  # Step size shrinkage
+            max_depth=6,  # Maximum tree depth for base learners
+            random_state=42  # Seed for reproducibility
+        )
         model.fit(self.X_train, self.y_train)
 
         # Hacer predicciones
@@ -56,6 +61,7 @@ if __name__ == "__main__":
     log = Lg(route)
     log.model()
     log.metrics()
+
 
 
 

@@ -1,3 +1,0 @@
-from sklearn.model_selection import train_test_split
-from xgboost import XGBClassifier
-from Proyecto_LeasingMC.fixing_data.preprocess import Preprocess
