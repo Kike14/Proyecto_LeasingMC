@@ -3,12 +3,13 @@ import pandas as pd
 from io import BytesIO
 import seaborn as sns
 import matplotlib.pyplot as plt
-
+from matplotlib.figure import Figure
 
 class Preprocess():
 
-    def __init__(self, file: BytesIO):
+    def __init__(self, file: BytesIO, selected_column: str):
 
+        self.selected_column = selected_column
         self.opened_file = self._load_file(file)
         self.personal = self._get_info()
 
@@ -43,7 +44,7 @@ class Preprocess():
     def _get_info(self) -> pd.DataFrame :
 
         df = self.opened_file
-        df = df[df["loan_intent"] == "PERSONAL"]
+        df = df[df["loan_intent"] == self.selected_column]
 
         return df
 
@@ -61,28 +62,94 @@ class Preprocess():
 
         return null_df
 
-    def distribution(self):
+
+    def change_outliers(self) -> pd.DataFrame:
+
+        columns = ['person_age', 'person_emp_length']
+
+        for column in columns:
+
+            median = self.personal[column].median()
+            self.personal.loc[:, column] = self.personal.loc[:, column].apply(lambda x: median if x > 100 else x)
+
+
+        return self.opened_file
+
+    def fill_null_values(self) -> pd.DataFrame:
+
+        for column in self.personal.columns:
+
+            if self.personal.loc[:, column].dtype == 'object':
+                continue
+
+            else:
+
+                median = self.personal.loc[:, column].median()
+
+                self.personal.loc[:, column] = self.personal.loc[:, column].apply(lambda x: median if pd.isna(x) else x)
+
+
+        return self.opened_file
+
+
+    def distribution(self) -> Figure:
 
         numeric_columns = self.personal.select_dtypes(include="number")
-        for column in numeric_columns:
-            sns.displot(numeric_columns[column], kde=True)
-            plt.title(f'Distribution of {column}')
-            plt.show()
+
+        num_columns = 3
+        num_rows = (len(numeric_columns.columns) + num_columns - 1) // num_columns  # Calculate the needed rows
+        fig, axes = plt.subplots(num_rows, num_columns, figsize=(15, num_rows * 5))  # Adjust figsize as needed
+        axes = axes.flatten()  # Flatten the axes array for easy indexing
+
+        for idx, column in enumerate(numeric_columns):
+            sns.histplot(numeric_columns[column], kde=True, ax=axes[idx])
+            axes[idx].set_title(f'Distribution of {column}')
+
+        for i in range(len(numeric_columns.columns), len(axes)):
+            fig.delaxes(axes[i])
+
+        plt.tight_layout(h_pad=5)
+        plt.show()
 
 
 
+    def distribution_with_changes(self, old_dataframe: pd.DataFrame, new_dataframe: pd.DataFrame) -> Figure:
+        numeric_columns = old_dataframe.select_dtypes(include="number").columns
+        num_columns = 3
+        num_rows = (len(numeric_columns) + num_columns - 1) // num_columns
+
+        fig, axes = plt.subplots(num_rows, num_columns, figsize=(15, num_rows * 5))
+        axes = axes.flatten()
+
+        for idx, column in enumerate(numeric_columns):
+
+            sns.kdeplot(old_dataframe[column], ax=axes[idx], color="blue", label="Original", fill=True)
+            sns.kdeplot(new_dataframe[column], ax=axes[idx], color="red", label="Modified", fill=True)
+
+            axes[idx].set_title(f'Distribution of {column}')
+            axes[idx].legend()
+
+        for i in range(len(numeric_columns), len(axes)):
+            fig.delaxes(axes[i])
+
+        plt.tight_layout(h_pad=5)
+        plt.show()
+        return fig
 
 
-pd.set_option('display.width', 100)
+
+pd.set_option('display.width', 1000)
 pd.set_option('display.max_columns', 30)
 pd.set_option('display.max_rows', 20)
+
 
 if __name__ == "__main__":
 
     route: str = "data/data.csv"
-    data = Preprocess("data/data.csv")
-    personal = data.personal
-    # print(type(personal))
-    print(data.distribution())
-
-
+    data = Preprocess("data/data.csv", "PERSONAL")
+    old = data.personal
+    data.change_outliers()
+    new = data.fill_null_values()
+    print(old)
+    print(new)
+    print(data.distribution_with_changes(old_dataframe=old, new_dataframe=new))
