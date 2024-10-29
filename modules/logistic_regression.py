@@ -31,11 +31,6 @@ class Lg():
         model.fit(self.X_train, self.y_train)
 
         y_prob = model.predict_proba(self.X_test)[:, 1]
-
-        # Define your custom threshold
-        threshold = 0.5
-
-        # Hacer predicciones
         y_pred = model.predict(self.X_test)
 
         return model, y_pred, y_prob
@@ -45,13 +40,13 @@ class Lg():
         model, y_pred, y_prob = self.model()
 
         # Define a range of thresholds to test
-        thresholds = np.arange(0.0, 1.05, 0.05)
+        thresholds = [0.5]
 
         # Store the results
         results = []
 
         for threshold in thresholds:
-            # Apply threshold to get predictions
+
             y_pred = (y_prob >= threshold).astype(int)
 
             accuracy = accuracy_score(self.y_test, y_pred)
