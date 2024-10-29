@@ -1,7 +1,7 @@
-# import sys
-# import os
-# project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-# sys.path.append(project_root)
+import sys
+import os
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(project_root)
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from fixing_data.preprocess import Preprocess
@@ -43,7 +43,7 @@ class Lg_powered():
         model, y_pred, y_prob = self.model()
 
         # Define a range of thresholds to test
-        thresholds = np.arange(0.0, 1.05, 0.05)
+        thresholds =[0.75]
 
         # Store the results
         results = []
@@ -103,13 +103,13 @@ pd.set_option('display.max_rows', 30)
 
 if __name__ == "__main__":
 
-    route = "../data/data.csv"
+    route = "./data/data.csv"
     log = Lg_powered(route)
-    # log.model()
-    log.optimize_model()
-    # metric = log.metrics()
-    # print(log)
-    # print(metric)
+    model, _, _= log.model()
+    
+    metric = log.metrics()
+    print(log)
+    print(metric)
 
 # Best Parameters: {'C': 0.01, 'class_weight': 'balanced', 'l1_ratio': 0.1, 'max_iter': 100, 'penalty': 'l2', 'solver': 'newton-cg'}
 # Best Cross-Validation Score: 0.8343668098854474

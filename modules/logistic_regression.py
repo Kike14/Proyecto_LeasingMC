@@ -1,7 +1,7 @@
-# import sys
-# import os
-# project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-# sys.path.append(project_root)
+import sys
+import os
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+sys.path.append(project_root)
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from fixing_data.preprocess import Preprocess
@@ -73,7 +73,7 @@ pd.set_option('display.max_rows', 30)
 
 if __name__ == "__main__":
 
-    route = "../data/data.csv"
+    route = "./data/data.csv"
     log = Lg(route)
     log.model()
     metric = log.metrics()
