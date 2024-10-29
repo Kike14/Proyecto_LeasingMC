@@ -1,12 +1,13 @@
-import sys
-import os
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.append(project_root)
+# import sys
+# import os
+# project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+# sys.path.append(project_root)
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from fixing_data.preprocess import Preprocess
 import pandas as pd
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score, confusion_matrix
+import numpy as np
 
 
 class Lg():
@@ -29,34 +30,60 @@ class Lg():
         model = LogisticRegression(max_iter=200)  # Aumentamos max_iter para evitar advertencias
         model.fit(self.X_train, self.y_train)
 
+        y_prob = model.predict_proba(self.X_test)[:, 1]
+
+        # Define your custom threshold
+        threshold = 0.5
+
         # Hacer predicciones
         y_pred = model.predict(self.X_test)
 
-        return model, y_pred  # Devuelve tanto el modelo como las predicciones
+        return model, y_pred, y_prob
 
     def metrics(self):
-        # Obtener modelo y predicciones
-        model, y_pred = self.model()
 
-        # Calcular las métricas
-        accuracy = accuracy_score(self.y_test, y_pred)
-        recall = recall_score(self.y_test, y_pred)
-        precision = precision_score(self.y_test, y_pred)
-        f1 = f1_score(self.y_test, y_pred)
+        model, y_pred, y_prob = self.model()
 
-        metrics = [accuracy, recall, precision, f1]
-        metrics_names = ["accuracy", "recall", "precision", "f1"]
+        # Define a range of thresholds to test
+        thresholds = np.arange(0.0, 1.05, 0.05)
 
-        for name, metric in zip(metrics_names, metrics):
-            print(f"The score {name} is: {metric}")
+        # Store the results
+        results = []
+
+        for threshold in thresholds:
+            # Apply threshold to get predictions
+            y_pred = (y_prob >= threshold).astype(int)
+
+            accuracy = accuracy_score(self.y_test, y_pred)
+            recall = recall_score(self.y_test, y_pred)
+            precision = precision_score(self.y_test, y_pred)
+            f1 = f1_score(self.y_test, y_pred)
+
+            # Store results for each threshold
+            results.append((threshold, accuracy, precision, recall, f1))
+
+        results_df = pd.DataFrame(results, columns=["Threshold", "Accuracy", "Precision", "Recall", "F1-Score"])
+
+        return results_df
+        # metrics = [accuracy, recall, precision, f1]
+        # metrics_names = ["accuracy", "recall", "precision", "f1"]
+        #
+        # for name, metric in zip(metrics_names, metrics):
+        #     print(f"The score {name} is: {metric}")
+
+pd.set_option('display.width', 1000)
+pd.set_option('display.max_columns', 30)
+pd.set_option('display.max_rows', 30)
 
 
 if __name__ == "__main__":
 
-    route = "./data/data.csv"
+    route = "../data/data.csv"
     log = Lg(route)
     log.model()
-    log.metrics()
+    metric = log.metrics()
+    print(log)
+    print(metric)
 
 
 

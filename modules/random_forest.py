@@ -1,13 +1,15 @@
-import sys
-import os
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-sys.path.append(project_root)
+# import sys
+# import os
+# project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+# sys.path.append(project_root)
 
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from       fixing_data.preprocess import Preprocess
 from sklearn.metrics import accuracy_score, recall_score, precision_score, f1_score, confusion_matrix
 from sklearn.model_selection import GridSearchCV
+import numpy as np
+import pandas as pd
 
 
 class Forest():
@@ -25,29 +27,53 @@ class Forest():
                                                                                 test_size=0.3)
 
     def model(self):
-        model = RandomForestClassifier()
+        model = RandomForestClassifier(bootstrap=False,
+                                       max_depth=10,
+                                       max_features=None,
+                                       min_samples_leaf =2,
+                                       min_samples_split= 5,
+                                       n_estimators= 200
+
+                                       )
+
         model.fit(self.X_train, self.y_train)
+
+        y_prob = model.predict_proba(self.X_test)[:, 1]
+
+        # Define your custom threshold
+        threshold = 0.5
 
         # Hacer predicciones
         y_pred = model.predict(self.X_test)
 
-        return model, y_pred
+        return model, y_pred, y_prob
+
 
     def metrics(self):
-        model, y_pred = self.model()
-        # Calcular las métricas
-        accuracy = accuracy_score(self.y_test, y_pred)
-        recall = recall_score(self.y_test, y_pred)
-        precision = precision_score(self.y_test, y_pred)
-        f1 = f1_score(self.y_test, y_pred)
 
-        metrics: list = [accuracy, recall, precision, f1]
-        metrics_names: list = ["accuracy", "recall", "precision", "f1"]
-        index: int = 0
+        model, y_pred, y_prob = self.model()
 
-        for metric in metrics:
-            print(f"The score {metrics_names[index]} is: {metric}")
-            index += 1
+        # Define a range of thresholds to test
+        thresholds = np.arange(0.0, 1.05, 0.05)
+
+        # Store the results
+        results = []
+
+        for threshold in thresholds:
+            # Apply threshold to get predictions
+            y_pred = (y_prob >= threshold).astype(int)
+
+            accuracy = accuracy_score(self.y_test, y_pred)
+            recall = recall_score(self.y_test, y_pred)
+            precision = precision_score(self.y_test, y_pred)
+            f1 = f1_score(self.y_test, y_pred)
+
+            # Store results for each threshold
+            results.append((threshold, accuracy, precision, recall, f1))
+
+        results_df = pd.DataFrame(results, columns=["Threshold", "Accuracy", "Precision", "Recall", "F1-Score"])
+
+        return results_df
 
     def optimize_model(self):
 
@@ -68,6 +94,7 @@ class Forest():
             cv=5,
             verbose=1,
             n_jobs=-1
+
         )
         # Fit GridSearchCV
         grid_search.fit(self.X_train, self.y_train)
@@ -84,12 +111,21 @@ class Forest():
         accuracy = accuracy_score(self.y_test, y_pred)
         print("Test Accuracy:", accuracy)
 
+pd.set_option('display.width', 1000)
+pd.set_option('display.max_columns', 30)
+pd.set_option('display.max_rows', 30)
+
+
 if __name__ == "__main__":
-    route = "./data/data.csv"
+    route = "../data/data.csv"
     forest = Forest(route)
-    forest.optimize_model()
-    # forest.model()
-    # forest.metrics()
+    # forest.optimize_model()
+    forest.model()
+    metric = forest.metrics()
+    print(metric)
 
-
+# Fitting 5 folds for each of 432 candidates, totalling 2160 fits
+# Best Parameters: {'bootstrap': False, 'max_depth': 10, 'max_features': None, 'min_samples_leaf': 2, 'min_samples_split': 5, 'n_estimators': 200}
+# Best Cross-Validation Score: 0.8369541320070516
+# Test Accuracy: 0.8352444176222088
 
