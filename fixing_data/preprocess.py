@@ -4,6 +4,7 @@ from io import BytesIO
 import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
+from scipy.stats import ks_2samp
 
 class Preprocess():
 
@@ -206,6 +207,35 @@ class Preprocess():
 
         return df
 
+    def ks_test(self, old_dataframe: pd.DataFrame,
+                                            new_dataframe: pd.DataFrame) -> pd.DataFrame:
+
+        # Identify common numeric columns
+        common_columns = old_dataframe.select_dtypes(include="number").columns.intersection(
+            new_dataframe.select_dtypes(include="number").columns)
+
+        # Dictionary to store KS results for each column
+        ks_results = {
+            "Column": [],
+            "KS Statistic": [],
+            "P-Value": [],
+            "Same Distribution": []
+        }
+
+        # Perform KS test for each common column
+        for column in common_columns:
+            data1 = old_dataframe[column].dropna()
+            data2 = new_dataframe[column].dropna()
+            ks_stat, p_value = ks_2samp(data1, data2)
+
+            ks_results["Column"].append(column)
+            ks_results["KS Statistic"].append(ks_stat)
+            ks_results["P-Value"].append(p_value)
+            ks_results["Same Distribution"].append(p_value > 0.05)  # True if p-value > 0.05
+
+        return pd.DataFrame(ks_results)
+
+
 
 
 
@@ -219,6 +249,8 @@ if __name__ == "__main__":
     data = Preprocess(route, "PERSONAL")
     old = data.personal
     new = data.preprocessed_data(old)
+    ks = data.ks_test(old, new)
     print(old)
     print(new)
     print(data.distribution_with_changes(old_dataframe=old, new_dataframe=new))
+    print(ks)
